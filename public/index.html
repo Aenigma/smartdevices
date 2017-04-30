@@ -1,28 +1,28 @@
 <html>
 <head>
-	<title>Hello</title>
-	<script src="https://unpkg.com/vue"></script>
-	<script src="/socket.io/socket.io.js"></script>
-	<script>
-	</script>
-	</head>
+  <title>Hello</title>
+  <script src="https://unpkg.com/vue"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+  </script>
+  </head>
 <body>
-	<div id='app'>
-		{{ status }}
-	</div>
-	<script>
-	var app = new Vue({
-		el: '#app',
-		data: {
-			status: '?'
-		}
-	});
-	var socket = io.connect();
-	socket.on('sensor', function (data) {
-		app.status = data.state;
-		console.log(data);
-	});
+  <div id='app'>
+    {{ status }}
+  </div>
+  <script>
+  var app = new Vue({
+    el: '#app',
+    data: {
+      status: '?'
+    }
+  });
+  var socket = io.connect();
+  socket.on('sensor', function (data) {
+    app.status = data.state;
+    console.log(data);
+  });
 
-	</script>
+  </script>
 </body>
 </html>
