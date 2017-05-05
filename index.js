@@ -14,6 +14,8 @@ const morgan = require('morgan');
 
 const pin = 4;
 
+const relayPin = 18;
+
 function sensorData() {
   function getPinData() {
     return {pin: pin, state: rpio.read(pin)};
@@ -27,6 +29,7 @@ function sensorData() {
 
 rpio.init({mapping: 'gpio'});
 rpio.open(pin, rpio.INPUT);
+rpio.open(relayPin, rpio.OUTPUT);
 
 app.use(morgan('combined'));
 app.use(express.static(__dirname + '/public'));
@@ -51,9 +54,20 @@ sio.on('connection', (socket) => {
   console.log(clientIp);
 
   socket.emit('sensor', sensorData());
+  socket.emit('relay', {
+    enabled: rpio.read(relayPin)
+  });
   socket.on('update', (data) => {
     socket.emit('sensor', sensorData());
   });
+
+  socket.on('relay', (data) => {
+    rpio.write(relayPin, data.enabled ? rpio.HIGH : rpio.LOW);
+    sio.emit('relay', {
+      enabled: rpio.read(relayPin)
+    });
+  });
+
   socket.on('disconnect', () => emitClients());
   emitClients();
 });

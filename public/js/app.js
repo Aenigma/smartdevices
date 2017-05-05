@@ -13,6 +13,9 @@ var app = new Vue({
       </label>
     </div>
     <div>
+      <button class="btn btn-default" v-on:click="toggleRelay" v-bind:style='lightStyleObj'>Turn {{relay ? " Off" : "On"}} Light</button>
+    </div>
+    <div>
       You are currently one of {{users}} people watching this right now.
     </div>
   </div>`,
@@ -22,6 +25,7 @@ var app = new Vue({
     users: 1,
     lastTimestamp: 0,
     currentTime: moment(),
+    relay: false,
     vibrateEnabled: !!navigator.vibrate,
     vibrate: false
   },
@@ -35,6 +39,15 @@ var app = new Vue({
         'alert-danger': !this.status,
         'alert-info': this.status,
       }
+    },
+    lightStyleObj: function() {
+      if(!this.relay) {
+        return null;
+      }
+      return {
+        'background-color': '#ffff40',
+        color: '#2b3e50'
+      };
     },
     lastHuman: function() {
       if(!this.lastTimestamp) {
@@ -56,6 +69,15 @@ var app = new Vue({
       this.lastTimestamp = data.last;
       console.log(data);
     },
+    toggleRelay: function() {
+      this.relay = !this.relay;
+      this.socket.emit('relay', {
+        enabled: this.relay
+      });
+    },
+    updateRelay: function(data) {
+      this.relay = data.enabled;
+    },
     updateUsers: function(data) {
       this.users = data.count;
     }
@@ -69,5 +91,6 @@ var app = new Vue({
 
     this.socket.on('sensor', this.updateSensor);
     this.socket.on('user', this.updateUsers);
+    this.socket.on('relay', this.updateRelay);
   }
 });
