@@ -9,7 +9,7 @@ var app = new Vue({
     <div>Last Event: {{lastHuman}}</div>
     <div class="checkbox">
       <label title="Only works if you have a vibrator, obviously">
-        <input type="checkbox" v-model="vibrate" :disabled="!vibrateEnabled"> I want to feel him kick
+        <input type="checkbox" v-model="vibrate" :disabled="!vibrateEnabled"> I want to feel him kick <small>(Android Only)</small>
       </label>
     </div>
     <div>
@@ -31,7 +31,7 @@ var app = new Vue({
   },
   computed: {
     message: function() {
-      return "Kevin is " + (this.status ? "kicking 😱" : "dead 😁");
+      return "Kevin is " + (this.status ? "kicking 😁" : "dead 😱");
     },
     classObj: function() {
       return {
@@ -67,7 +67,6 @@ var app = new Vue({
       }
       this.status = data.state;
       this.lastTimestamp = data.last;
-      console.log(data);
     },
     toggleRelay: function() {
       this.relay = !this.relay;
@@ -75,11 +74,19 @@ var app = new Vue({
         enabled: this.relay
       });
     },
-    updateRelay: function(data) {
-      this.relay = data.enabled;
-    },
-    updateUsers: function(data) {
-      this.users = data.count;
+    update: function(data) {
+      console.log(data);
+      if (data.sensor) {
+        this.updateSensor(data.sensor);
+      }
+
+      if (data.relay) {
+        this.relay = data.relay.enabled;
+      }
+
+      if (data.users) {
+        this.users = data.users.count;
+      }
     }
   },
   created: function() {
@@ -89,8 +96,6 @@ var app = new Vue({
       this.currentTime = moment();
     }, 1000);
 
-    this.socket.on('sensor', this.updateSensor);
-    this.socket.on('user', this.updateUsers);
-    this.socket.on('relay', this.updateRelay);
+    this.socket.on('update', this.update);
   }
 });

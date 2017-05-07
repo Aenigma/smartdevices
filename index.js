@@ -16,6 +16,19 @@ const pin = 4;
 
 const relayPin = 18;
 
+rpio.init({mapping: 'gpio'});
+rpio.open(pin, rpio.INPUT);
+rpio.open(relayPin, rpio.OUTPUT);
+
+app.use(morgan('combined'));
+app.use(express.static(__dirname + '/public'));
+app.get('/', (req, res) => {
+  res.send('hello world!');
+});
+
+var dataLog = [];
+var clientTable = new Map();
+
 function sensorData() {
   function getPinData() {
     return {pin: pin, state: rpio.read(pin)};
@@ -27,54 +40,42 @@ function sensorData() {
   });
 }
 
-rpio.init({mapping: 'gpio'});
-rpio.open(pin, rpio.INPUT);
-rpio.open(relayPin, rpio.OUTPUT);
-
-app.use(morgan('combined'));
-app.use(express.static(__dirname + '/public'));
-app.get('/', (req, res) => {
-  res.send('hello world!');
-});
-
-function emitClients() {
-  sio.sockets.clients((err, clients) => {
-    if(err) throw err;
-    console.log(clients);
-    sio.emit('user', {
-      count: clients.length
-    });
-  });
+function update() {
+  return {
+    version: '0',
+    relay: {
+      enabled: rpio.read(relayPin)
+    },
+    sensor: sensorData(),
+    users: {
+      count: clientTable.size
+    }
+  }
 }
 
 sio.on('connection', (socket) => {
   var socketId = socket.id;
   var clientIp = socket.request.connection.remoteAddress;
 
-  console.log(clientIp);
+  clientTable.set(socketId, clientIp);
 
-  socket.emit('sensor', sensorData());
-  socket.emit('relay', {
-    enabled: rpio.read(relayPin)
-  });
-  socket.on('update', (data) => {
-    socket.emit('sensor', sensorData());
-  });
+  socket.on('update', () => sio.emit(update()));
 
   socket.on('relay', (data) => {
     rpio.write(relayPin, data.enabled ? rpio.HIGH : rpio.LOW);
-    sio.emit('relay', {
-      enabled: rpio.read(relayPin)
-    });
+    sio.emit('update', update());
   });
 
-  socket.on('disconnect', () => emitClients());
-  emitClients();
+  socket.on('disconnect', () => {
+    console.log(clientTable.entries());
+    clientTable.delete(socketId);
+    sio.emit('update', update());
+  });
+
+  socket.emit('update', update());
 });
 
 server.listen(3000);
-
-let dataLog = [];
 
 rpio.poll(pin, (e) => {
   let p = sensorData();
@@ -93,5 +94,5 @@ rpio.poll(pin, (e) => {
     console.log("Event %s at %s", dataLog.length, data.time);
   }
 
-  sio.emit('sensor', p);
+  sio.emit('update', update());
 });
