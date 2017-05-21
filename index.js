@@ -50,7 +50,7 @@ function update() {
     users: {
       count: clientTable.size
     }
-  }
+  };
 }
 
 sio.on('connection', (socket) => {
@@ -77,12 +77,12 @@ sio.on('connection', (socket) => {
 
 server.listen(3000);
 
-rpio.poll(pin, (e) => {
+rpio.poll(pin, () => {
   let p = sensorData();
   let last = sensorData.last;
 
   if(last && p.state === last.state) {
-    console.log("ignored event");
+    console.log('ignored event');
     return;
   }
 
@@ -91,7 +91,7 @@ rpio.poll(pin, (e) => {
     dataLog = [...dataLog, data];
     p.last = data.time;
 
-    console.log("Event %s at %s", dataLog.length, data.time);
+    console.log('Event %s at %s', dataLog.length, data.time);
   }
 
   sio.emit('update', update());
