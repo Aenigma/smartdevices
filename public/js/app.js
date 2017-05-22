@@ -66,7 +66,7 @@ var app = new Vue({
         navigator.vibrate([300, 50, 300]);
       }
       this.status = data.state;
-      this.lastTimestamp = data.last;
+      this.lastTimestamp = data.time;
     },
     toggleRelay: function() {
       this.relay = !this.relay;
