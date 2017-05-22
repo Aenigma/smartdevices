@@ -12,18 +12,11 @@ describe('SensorService', function() {
     });
   });
   describe('#update(bool)', function() {
-    it('should return the value given with timestamp when truthy', function() {
+    it('should return the value given with timestamp', function() {
       const ss = new SensorService();
       assert.equal(true, ss.update(true).state);
-      ss.update(false);
+      assert.equal(false, ss.update(false).state);
       assert.deepEqual(true, ss.update(true).state);
-    });
-
-    it('should return the last value when not truthy', function() {
-      const ss = new SensorService();
-      let result = ss.update(true);
-      let result2 = ss.update(false);
-      assert.deepEqual(result, result2);
     });
   });
 });
